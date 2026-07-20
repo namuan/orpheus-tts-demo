@@ -1,5 +1,7 @@
 # Orpheus TTS Demo
 
+![Orpheus TTS Demo Screenshot](assets/app.png)
+
 Interactive macOS app for local text-to-speech using the [Orpheus 3B](https://huggingface.co/mlx-community/orpheus-3b-0.1-ft-bf16) model running on Apple Silicon via [mlx-audio-swift](https://github.com/Blaizzy/mlx-audio-swift). Built entirely with SwiftUI and SPM — no Xcode project file needed.
 
 ## Features
