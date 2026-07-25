@@ -117,7 +117,7 @@ struct MainView: View {
             self.ttsModel = model
             self.modelStatus = "Loaded"
             self.isProcessing = false
-            appendLog("✅ Orpheus 3B model loaded on Apple Silicon GPU!\n")
+            appendLog("✅ Orpheus 3B model loaded locally.\n")
         } catch {
             self.modelStatus = "Error"
             self.isProcessing = false
@@ -140,22 +140,27 @@ struct MainView: View {
             // Prepare reference audio if using zero-shot cloning
             let refAudio: MLXArray? = try loadReferenceAudio()
 
-            // generatePCMBufferStream is @MainActor, synchronous, returns AsyncThrowingStream
-            let stream = model.generatePCMBufferStream(
-                text: scriptText,
-                voice: useReferenceAudio ? nil : selectedVoice,
-                refAudio: refAudio,
-                refText: nil,
-                language: nil,
-                generationParameters: GenerateParameters(
-                    maxTokens: 1200,
-                    temperature: 0.6,
-                    topP: 0.8,
-                    repetitionPenalty: 1.3,
-                    repetitionContextSize: 20
-                ),
-                streamingInterval: 2.0
-            )
+            // MLX reports tensor/backend failures through a task-local error handler.
+            // The stream's child tasks inherit this handler. Retain its ErrorBox so any
+            // backend failure becomes a normal inference error instead of fatalError.
+            let (stream, mlxErrorBox) = try withError { errorBox in
+                let stream = model.generatePCMBufferStream(
+                    text: scriptText,
+                    voice: useReferenceAudio ? nil : selectedVoice,
+                    refAudio: refAudio,
+                    refText: nil,
+                    language: nil,
+                    generationParameters: GenerateParameters(
+                        maxTokens: 1200,
+                        temperature: 0.6,
+                        topP: 0.8,
+                        repetitionPenalty: 1.3,
+                        repetitionContextSize: 20
+                    ),
+                    streamingInterval: 2.0
+                )
+                return (stream, errorBox)
+            }
 
             for try await pcmBuffer in stream {
                 totalChunks += 1
@@ -170,6 +175,7 @@ struct MainView: View {
                 // Play audio in real-time
                 AudioStreamPlayer.shared.playChunk(buffer: pcmBuffer)
             }
+            try mlxErrorBox.check()
 
             let totalDuration = CFAbsoluteTimeGetCurrent() - startTime
             let message = String(

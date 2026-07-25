@@ -27,6 +27,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 // MARK: - App Bootstrap
 
+// The terminal launch script ships a stub Metal library, not MLX's full kernel
+// library. Xcode launches do not set this flag and therefore retain GPU support.
+if ProcessInfo.processInfo.environment["ORPHEUS_USE_CPU"] == "1" {
+    Device.setDefault(device: .cpu)
+}
+
 let app = NSApplication.shared
 app.setActivationPolicy(.regular)
 let delegate = AppDelegate()

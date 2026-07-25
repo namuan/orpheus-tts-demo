@@ -45,4 +45,4 @@ METALEOF
 fi
 
 echo "==> Launching Orpheus TTS..."
-exec "$ARCH_DIR/OrpheusUIApp"
+ORPHEUS_USE_CPU=1 exec "$ARCH_DIR/OrpheusUIApp"

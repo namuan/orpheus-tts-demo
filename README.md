@@ -48,7 +48,7 @@ Build and run entirely from the command line:
 
 This builds with `swift build`, creates a stub Metal library needed for device detection, and launches the app. Inference runs on CPU via the Accelerate framework — functional but slower than GPU.
 
-> **Note:** To switch between GPU and CPU modes, add or remove `Device.setDefault(device: .cpu)` in `Sources/OrpheusUIApp/main.swift`.
+> **Note:** Terminal builds default to CPU because `run.sh` creates only a stub Metal library. Xcode launches retain GPU acceleration when MLX's complete Metal library is bundled.
 
 ## Usage
 
